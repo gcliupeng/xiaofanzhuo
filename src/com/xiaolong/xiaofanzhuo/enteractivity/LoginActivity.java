@@ -1,7 +1,7 @@
 package com.xiaolong.xiaofanzhuo.enteractivity;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,16 +10,21 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.xiaolong.xiaofanzhuo.dataoperations.GetResponseFromServerAction;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.xiaolong.xiaofanzhuo.dataoperations.DataOperations;
 import com.xiaolong.xiaofanzhuo.myapplication.BaseActivity;
-import com.xiaolong.xiaofanzhuo.myapplication.MyApplication;
 import com.xiaolong.xiaofanzhuo_xiaolonginfo.R;
 
 /**
@@ -36,7 +41,8 @@ public class LoginActivity extends BaseActivity {
 	private EditText edTextUser, edTextSecretCode;
 	private Button buttonLogin;
 	private Button buttonRegister;
-	private Button buttonBack;
+	private TextView titleView;
+
 	private String userName = "";
 	private String password = "";
 	private CheckBox keepPassword;
@@ -44,6 +50,8 @@ public class LoginActivity extends BaseActivity {
 	private SharedPreferences sp;
 	private boolean autoLoginFlag = false;
 	private boolean keepPwdFlag = false;
+	private ImageButton buttonBack;
+	private ImageButton buttonHome;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,12 +68,31 @@ public class LoginActivity extends BaseActivity {
 		buttonLogin = (Button) findViewById(R.id.button_login);
 		buttonRegister = (Button) findViewById(R.id.button_regeist);
 
-		buttonBack = (Button) findViewById(R.id.register_button_back);
-
+		buttonBack = (ImageButton) findViewById(R.id.button_back);
+		buttonHome = (ImageButton) findViewById(R.id.button_home);
+		titleView = (TextView) findViewById(R.id.detail_title);
+		DataOperations.setTypefaceForTextView(LoginActivity.this, titleView);
+		titleView.setText("用户登录");
+		
 		buttonBack.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
+				Intent intent = new Intent();
+				intent.setClass(LoginActivity.this, ZoneShowActivity.class);
+				startActivity(intent);
+				LoginActivity.this.finish();
+			}
+
+		});
+		
+		buttonHome.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent intent = new Intent();
+				intent.setClass(LoginActivity.this, ZoneShowActivity.class);
+				startActivity(intent);
 				LoginActivity.this.finish();
 			}
 
@@ -77,10 +104,10 @@ public class LoginActivity extends BaseActivity {
 		buttonLogin.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				
+
 				userName = edTextUser.getText().toString();
 				password = edTextSecretCode.getText().toString();
-				
+
 				if (userName.equals("")) {
 					Toast.makeText(LoginActivity.this, "请输入手机号",
 							Toast.LENGTH_SHORT).show();
@@ -90,53 +117,73 @@ public class LoginActivity extends BaseActivity {
 					Toast.makeText(LoginActivity.this, "请输入密码",
 							Toast.LENGTH_SHORT).show();
 					return;
-				}		
-				
+				}
+
 				AccountAuthentication authentication = new AccountAuthentication();
 				AlertDialog.Builder builder = new AlertDialog.Builder(
 						LoginActivity.this);
 				if (!authentication.checkup(userName, password, builder))
 					return;
 
-				try {
-					String requestCode = "WhiteLogin____" + userName + "_"
-							+ password;
+				String requestCode = "WhiteLogin____" + userName + "_"
+						+ password;
+				AsyncHttpClient Down = new AsyncHttpClient();
+				Down.get(DataOperations.webServer + requestCode,
+						new AsyncHttpResponseHandler() {
 
-					GetResponseFromServerAction reponse = new GetResponseFromServerAction();
-					String ret = reponse.getStringFromServerById(requestCode);
-					if (ret.contains("WhiteLogin_Result____UsernameTRUE_PasswdTRUE")) {
+							@SuppressWarnings("deprecation")
+							@Override
+							public void onFailure(Throwable error,
+									String content) {
+								// TODO Auto-generated method stub
+								super.onFailure(error, content);
+								Toast.makeText(LoginActivity.this,
+										"亲，网络不给力，请稍后!", Toast.LENGTH_SHORT)
+										.show();
+							}
 
-						Toast.makeText(LoginActivity.this, "登录成功!",
-								Toast.LENGTH_SHORT).show();
+							@SuppressWarnings("deprecation")
+							@Override
+							public void onSuccess(int statusCode, String content) {
+								// TODO Auto-generated method stub
+								super.onSuccess(statusCode, content);
+								if (content
+										.contains("WhiteLogin_Result____UsernameTRUE_PasswdTRUE")) {
 
-						if (true == autoLoginFlag || true == keepPwdFlag) {
-							sp.edit().putString("USERNAME", userName).commit();
-							sp.edit().putString("PASSWORD", password).commit();
-						}
+									Toast.makeText(LoginActivity.this, "登录成功!",
+											Toast.LENGTH_SHORT).show();
 
-						Intent intent = new Intent();
-						intent.setClass(LoginActivity.this,
-								PersonInfoActivity.class);
-						startActivity(intent);
-						LoginActivity.this.finish();
-						return;
-					}
-					if (ret.contains("WhiteLogin_Result____UsernameFALSE_PasswdFALSE")) {
-						Toast.makeText(LoginActivity.this, "登录失败，用户名或密码错误!",
-								Toast.LENGTH_SHORT).show();
-						return;
-					}
-					Toast.makeText(LoginActivity.this, "亲，网络不给力，请稍后!",
-							Toast.LENGTH_SHORT).show();
-					Log.i(TAG, "登录服务器返回信息未定义!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+									if (true == autoLoginFlag
+											|| true == keepPwdFlag) {
+										sp.edit()
+												.putString("USERNAME", userName)
+												.commit();
+										sp.edit()
+												.putString("PASSWORD", password)
+												.commit();
+									}
 
+									Intent intent = new Intent();
+									intent.setClass(LoginActivity.this,
+											PersonInfoActivity.class);
+									startActivity(intent);
+									LoginActivity.this.finish();
+									return;
+								}
+								if (content
+										.contains("WhiteLogin_Result____UsernameFALSE_PasswdFALSE")) {
+									Toast.makeText(LoginActivity.this,
+											"登录失败，用户名或密码错误!",
+											Toast.LENGTH_SHORT).show();
+									return;
+								}
+								Toast.makeText(LoginActivity.this,
+										"亲，网络不给力，请稍后!", Toast.LENGTH_SHORT)
+										.show();
+								Log.i(TAG,
+										"登录服务器返回信息未定义!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+							}
+						});
 			}
 		});
 
@@ -178,6 +225,104 @@ public class LoginActivity extends BaseActivity {
 			}
 
 		});
+		
+		edTextSecretCode.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+
+		    @Override
+		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		        if (actionId == EditorInfo.IME_ACTION_DONE) {
+		            InputMethodManager imm = (InputMethodManager)v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+					
+		            userName = edTextUser.getText().toString();
+					password = edTextSecretCode.getText().toString();
+
+					if (userName.equals("")) {
+						Toast.makeText(LoginActivity.this, "请输入手机号",
+								Toast.LENGTH_SHORT).show();
+						return false;
+					}
+					if (password.equals("")) {
+						Toast.makeText(LoginActivity.this, "请输入密码",
+								Toast.LENGTH_SHORT).show();
+						return false;
+					}
+
+					AccountAuthentication authentication = new AccountAuthentication();
+					AlertDialog.Builder builder = new AlertDialog.Builder(
+							LoginActivity.this);
+					if (!authentication.checkup(userName, password, builder))
+						return false;
+
+					String requestCode = "WhiteLogin____" + userName + "_"
+							+ password;
+					AsyncHttpClient Down = new AsyncHttpClient();
+					Down.get(DataOperations.webServer + requestCode,
+							new AsyncHttpResponseHandler() {
+
+								@SuppressWarnings("deprecation")
+								@Override
+								public void onFailure(Throwable error,
+										String content) {
+									// TODO Auto-generated method stub
+									super.onFailure(error, content);
+									Toast.makeText(LoginActivity.this,
+											"亲，网络不给力，请稍后!", Toast.LENGTH_SHORT)
+											.show();
+								}
+
+								@SuppressWarnings("deprecation")
+								@Override
+								public void onSuccess(int statusCode, String content) {
+									// TODO Auto-generated method stub
+									super.onSuccess(statusCode, content);
+									if (content
+											.contains("WhiteLogin_Result____UsernameTRUE_PasswdTRUE")) {
+
+										Toast.makeText(LoginActivity.this, "登录成功!",
+												Toast.LENGTH_SHORT).show();
+
+										if (true == autoLoginFlag
+												|| true == keepPwdFlag) {
+											sp.edit()
+													.putString("USERNAME", userName)
+													.commit();
+											sp.edit()
+													.putString("PASSWORD", password)
+													.commit();
+										}
+
+										Intent intent = new Intent();
+										intent.setClass(LoginActivity.this,
+												PersonInfoActivity.class);
+										startActivity(intent);
+										LoginActivity.this.finish();
+										return;
+									}
+									if (content
+											.contains("WhiteLogin_Result____UsernameFALSE_PasswdFALSE")) {
+										Toast.makeText(LoginActivity.this,
+												"登录失败，用户名或密码错误!",
+												Toast.LENGTH_SHORT).show();
+										return;
+									}
+									Toast.makeText(LoginActivity.this,
+											"亲，网络不给力，请稍后!", Toast.LENGTH_SHORT)
+											.show();
+									Log.i(TAG,
+											"登录服务器返回信息未定义!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+								}
+							});
+		           
+		            
+					
+		            return true;  
+		        }
+		        return false;
+		    }
+			
+		});
+		
 	}
 
 	private void checkAutoLogin() {
@@ -190,36 +335,54 @@ public class LoginActivity extends BaseActivity {
 				autoLogin.setChecked(true);
 				keepPwdFlag = true;
 				autoLoginFlag = true;
-				try {
-					String user = sp.getString("USERNAME", "");
-					String pwd = sp.getString("PASSWORD", "");
-					String requestCode = "WhiteLogin____" + user + "_" + pwd;
-					GetResponseFromServerAction reponse = new GetResponseFromServerAction();
-					String ret = reponse.getStringFromServerById(requestCode);
-					if (ret.contains("WhiteLogin_Result____UsernameTRUE_PasswdTRUE")) {
-						Toast.makeText(LoginActivity.this, "自动登录!",
-								Toast.LENGTH_SHORT).show();
 
-						Intent intent = new Intent();
-						intent.setClass(LoginActivity.this,
-								PersonInfoActivity.class);
-						startActivity(intent);
-						LoginActivity.this.finish();
-						return;
-					}
-					if (ret.contains("WhiteLogin_Result____UsernameFALSE_PasswdFALSE")) {
-						Toast.makeText(LoginActivity.this, "登录失败，用户名或密码错误!",
-								Toast.LENGTH_SHORT).show();
-						return;
-					}
-					Log.i(TAG, "登录服务器返回信息未定义!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				String user = sp.getString("USERNAME", "");
+				String pwd = sp.getString("PASSWORD", "");
+				String requestCode = "WhiteLogin____" + user + "_" + pwd;
+
+				AsyncHttpClient Down = new AsyncHttpClient();
+				Down.get(DataOperations.webServer + requestCode,
+						new AsyncHttpResponseHandler() {
+
+							@SuppressWarnings("deprecation")
+							@Override
+							public void onFailure(Throwable error,
+									String content) {
+								// TODO Auto-generated method stub
+								super.onFailure(error, content);
+								Toast.makeText(LoginActivity.this,
+										"亲，网络不给力，请稍后!", Toast.LENGTH_SHORT)
+										.show();
+							}
+
+							@SuppressWarnings("deprecation")
+							@Override
+							public void onSuccess(int statusCode, String content) {
+								// TODO Auto-generated method stub
+								super.onSuccess(statusCode, content);
+								if (content
+										.contains("WhiteLogin_Result____UsernameTRUE_PasswdTRUE")) {
+									Toast.makeText(LoginActivity.this, "自动登录!",
+											Toast.LENGTH_SHORT).show();
+
+									Intent intent = new Intent();
+									intent.setClass(LoginActivity.this,
+											PersonInfoActivity.class);
+									startActivity(intent);
+									LoginActivity.this.finish();
+									return;
+								}
+								if (content
+										.contains("WhiteLogin_Result____UsernameFALSE_PasswdFALSE")) {
+									Toast.makeText(LoginActivity.this,
+											"登录失败，用户名或密码错误!",
+											Toast.LENGTH_SHORT).show();
+									return;
+								}
+								Log.i(TAG,
+										"登录服务器返回信息未定义!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+							}
+						});
 			}
 		}
 		return;
@@ -241,38 +404,4 @@ public class LoginActivity extends BaseActivity {
 		}
 	}
 
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-			// return true;//返回真表示返回键被屏蔽掉
-			creatDialog();// 创建弹出的Dialog
-		}
-		return super.onKeyDown(keyCode, event);
-	}
-
-	/**
-	 * 弹出提示退出对话框
-	 */
-	private void creatDialog() {
-		new AlertDialog.Builder(this)
-				.setMessage("亲，您真的要退出小饭桌么?")
-				.setPositiveButton("残忍退出",
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								MyApplication.getInstance().exit();
-							}
-						})
-				.setNegativeButton("再逛会儿",
-						new DialogInterface.OnClickListener() {
-
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								dialog.dismiss();
-							}
-						}).show();
-	}
 }
