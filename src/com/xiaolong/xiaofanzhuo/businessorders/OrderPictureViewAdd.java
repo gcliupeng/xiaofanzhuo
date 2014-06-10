@@ -1,4 +1,4 @@
-package com.xiaolong.xiaofanzhuo.businessdetails;
+package com.xiaolong.xiaofanzhuo.businessorders;
 
 import java.util.List;
 
@@ -7,8 +7,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,20 +21,17 @@ import com.xiaolong.xiaofanzhuo.fileio.FileUtil;
 import com.xiaolong.xiaofanzhuo.fileio.IViewAddAndEventSet;
 import com.xiaolong.xiaofanzhuo_xiaolonginfo.R;
 
-/**
- * MenuPictureViewAdd
- * 
+/*
+ * OrderPictureViewAdd
  * @author hongxiaolong
- * 
  */
 
-public class MenuPictureViewAdd implements IViewAddAndEventSet {
+public class OrderPictureViewAdd implements IViewAddAndEventSet {
 
-	@SuppressWarnings("unused")
 	private BasePictAdapter adapter;
 	private String database = null;
 
-	public MenuPictureViewAdd(BasePictAdapter adapter) {
+	public OrderPictureViewAdd(BasePictAdapter adapter) {
 		this.adapter = adapter;
 	}
 
@@ -47,17 +44,27 @@ public class MenuPictureViewAdd implements IViewAddAndEventSet {
 			holder = new ViewHolder();
 			LayoutInflater layoutInflater = (LayoutInflater) context
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			convertView = layoutInflater.inflate(R.layout.hong_menu_infos_list,
+			convertView = layoutInflater.inflate(R.layout.hong_menu_order_item,
 					null);
+
 			holder = new ViewHolder();
 			holder.imageView = (ImageView) convertView
-					.findViewById(R.id.news_pic);
-			holder.contentView = (TextView) convertView
-					.findViewById(R.id.news_title);
-			holder.timeView = (TextView) convertView
-					.findViewById(R.id.news_time);
-			DataOperations.setTypefaceForTextView(context, holder.contentView);
-			DataOperations.setTypefaceForTextView(context, holder.timeView);
+					.findViewById(R.id.order_image_view);
+			holder.textTitle = (TextView) convertView
+					.findViewById(R.id.menu_name);
+			holder.textPrice = (TextView) convertView
+					.findViewById(R.id.menu_price);
+			holder.buttonAdd = (Button) convertView
+					.findViewById(R.id.button_add);
+			holder.buttonDel = (Button) convertView
+					.findViewById(R.id.button_delete);
+			holder.textAmount = (TextView) convertView
+					.findViewById(R.id.menu_amount);
+			
+			DataOperations.setTypefaceForTextView(context, holder.textTitle);
+			DataOperations.setTypefaceForTextView(context, holder.textPrice);
+			DataOperations.setTypefaceForTextView(context, holder.textAmount);
+
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
@@ -65,42 +72,19 @@ public class MenuPictureViewAdd implements IViewAddAndEventSet {
 
 		final Bundle data = list.get(position);
 		final String id = data.getString("id");
+		final String quantity = data.getString("quantity");
+		final String url = data.getString("url");
 		database = data.getString("database");
 
 		AsyncHttpClient Down = new AsyncHttpClient();
-
-		if (data.containsKey("height"))
-			holder.imageView.setLayoutParams(new LinearLayout.LayoutParams(
-					LinearLayout.LayoutParams.MATCH_PARENT, (int) data
-							.getInt("height")));
-		else {
-			final ImageView imageView = holder.imageView;
-			Down.get(DataOperations.webServer + id + "_Height",
-					new AsyncHttpResponseHandler() {
-						@SuppressWarnings("deprecation")
-						@Override
-						public void onSuccess(int statusCode, String content) {
-							// TODO Auto-generated method stub
-							super.onSuccess(statusCode, content);
-							if (DataOperations.isInvalidDataFromServer(content))
-								return;
-							int height = (int) Integer.valueOf(DataOperations
-									.getActualString(content));
-							data.putInt("height", height);
-							imageView
-									.setLayoutParams(new LinearLayout.LayoutParams(
-											LinearLayout.LayoutParams.MATCH_PARENT,
-											(int) height));
-						}
-					});
-		}
+		
 		FileUtil.setImageSrc(holder.imageView,
-				DataOperations.getActualString(data.getString("url")));
+				DataOperations.getActualString(url));
 
 		if (data.containsKey("food"))
-			holder.contentView.setText(data.getString("food"));
+			holder.textTitle.setText(data.getString("food"));
 		else {
-			final TextView foodView = holder.contentView;
+			final TextView foodName = holder.textTitle;
 			Down.get(DataOperations.webServer + id + "_Food",
 					new AsyncHttpResponseHandler() {
 						@SuppressWarnings("deprecation")
@@ -110,16 +94,15 @@ public class MenuPictureViewAdd implements IViewAddAndEventSet {
 							super.onSuccess(statusCode, content);
 							String food = DataOperations
 									.getActualString(content);
-							data.putString("food", food);
-							foodView.setText(food);
+							data.putString("food", content);
+							foodName.setText(food);
 						}
 					});
 		}
-
 		if (data.containsKey("foodprice"))
-			holder.timeView.setText(data.getString("foodprice"));
+			holder.textPrice.setText(data.getString("foodprice"));
 		else {
-			final TextView timeView = holder.timeView;
+			final TextView timeView = holder.textPrice;
 			Down.get(DataOperations.webServer + id + "_FoodPrice",
 					new AsyncHttpResponseHandler() {
 						@SuppressWarnings("deprecation")
@@ -129,30 +112,57 @@ public class MenuPictureViewAdd implements IViewAddAndEventSet {
 							super.onSuccess(statusCode, content);
 							String foodprice = DataOperations
 									.getActualString(content);
-							data.putString("foodprice", foodprice);
+							data.putString("foodprice", content);
 							timeView.setText("单价: " + foodprice + "元");
 						}
 					});
 		}
 
-		holder.imageView.setOnClickListener(new View.OnClickListener() {
-
+		final TextView quantityView = holder.textAmount;
+		quantityView.setText(quantity);
+		holder.buttonAdd.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				String price = "";
 				if (data.containsKey("foodprice"))
 					price = data.getString("foodprice");
-				else
+				else 
 					Toast.makeText(context.getApplicationContext(),
-							"亲，请等待加载完成!!", Toast.LENGTH_SHORT).show();
-				System.out.println("已记录图片点击!!!");
-				DatabaseAdapter dbHelper = new DatabaseAdapter(context,
-						database);
+							"亲，请等待加载完成!!", Toast.LENGTH_SHORT)
+							.show();
+				System.out.println("点击 + ");
+				DatabaseAdapter dbHelper = new DatabaseAdapter(context, database);
 				dbHelper.open();
-				dbHelper.updateFoodTable(id,price, true);
+				dbHelper.updateFoodTable(id, price, true);
+				String count = dbHelper.fetchFoodQuantity(id);
+				quantityView.setText(count);
 				dbHelper.close();
 
 				Intent intent = new Intent();
-				intent.setAction("action.updateDetailUI");
+				intent.setAction("action.updateOrderUI");
+				context.sendBroadcast(intent);
+			}
+		});
+		holder.buttonDel.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				String price = "";
+				if (data.containsKey("foodprice"))
+					price = data.getString("foodprice");
+				else 
+					Toast.makeText(context.getApplicationContext(),
+							"亲，请等待加载完成!!", Toast.LENGTH_SHORT)
+							.show();
+				System.out.println("点击 - ");
+				DatabaseAdapter dbHelper = new DatabaseAdapter(context, database);
+				dbHelper.open();
+				int count = Integer.valueOf(dbHelper.fetchFoodQuantity(id));
+				dbHelper.updateFoodTable(id, price, false);
+				if (0 == --count)
+					adapter.removePicture(data);
+				quantityView.setText(String.valueOf(count));
+				dbHelper.close();
+
+				Intent intent = new Intent();
+				intent.setAction("action.updateOrderUI");
 				context.sendBroadcast(intent);
 			}
 		});
@@ -162,7 +172,10 @@ public class MenuPictureViewAdd implements IViewAddAndEventSet {
 
 	class ViewHolder {
 		ImageView imageView;
-		TextView contentView;
-		TextView timeView;
+		TextView textTitle;
+		TextView textPrice;
+		Button buttonAdd;
+		Button buttonDel;
+		TextView textAmount;
 	}
 }

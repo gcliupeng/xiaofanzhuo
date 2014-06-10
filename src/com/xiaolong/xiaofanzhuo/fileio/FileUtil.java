@@ -11,6 +11,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.xiaolong.xiaofanzhuo.dataoperations.DataOperations;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
@@ -78,11 +80,17 @@ public class FileUtil {
 	 * @return
 	 */
 	private static Bitmap returnBitmap(String url) {
+
+		if (DataOperations.isInvalidDataFromServer(url))
+			return null;
+		
+		String absolutPath = url.replaceAll("%2F", "/").replace("%3A", ":");// 得到绝对路径
+
 		URL fileUrl = null;
 		Bitmap bitmap = null;
 
 		try {
-			fileUrl = new URL(url);
+			fileUrl = new URL(absolutPath);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -109,6 +117,10 @@ public class FileUtil {
 	 * @return
 	 */
 	public static Bitmap getBitMapIfNecessary(String name) {
+		
+		if (DataOperations.isInvalidDataFromServer(name))
+			return null;
+		
 		Bitmap map = loadBitmapFromCache(name);// 从缓存中获取缩略图
 		if (map == null) {
 			Bitmap bt = returnBitmap(name);
@@ -125,13 +137,16 @@ public class FileUtil {
 	 * @return
 	 */
 	public static Bitmap loadBitmapFromCache(String name) {
+		
+		if (DataOperations.isInvalidDataFromServer(name))
+			return null;
+		
 		String filePath = getCacheDirPath() + File.separator
 				+ name.replaceAll("/", "%2F").replace(":", "%3A");
-		System.out.println("Read from SD card:" + filePath);
 		File f = new File(filePath);
 		if (!f.exists())
 			return null;
-
+		System.out.println("Read from SD card:" + filePath);
 		return BitmapFactory.decodeFile(filePath);
 	}
 
@@ -143,6 +158,10 @@ public class FileUtil {
 	 * @return
 	 */
 	public static boolean saveBitmapToCache(String name, Bitmap bitmap) {
+		
+		if (DataOperations.isInvalidDataFromServer(name))
+			return false;
+		
 		String absolutPath = getCacheDirPath() + File.separator
 				+ name.replaceAll("/", "%2F").replace(":", "%3A");// 得到绝对路径
 		System.out.println("Save To SD card:" + absolutPath);
@@ -181,10 +200,20 @@ public class FileUtil {
 	 * @param imageUrl
 	 */
 	public static void setImageSrc(ImageView imageView, String imageUrl) {
+		
+		if (DataOperations.isInvalidDataFromServer(imageUrl))
+			return;
+		
+		String filePath = getCacheDirPath() + File.separator
+				+ imageUrl.replaceAll("/", "%2F").replace(":", "%3A");
+		System.out.println("Read from SD card:" + filePath);
+		
 		BitmapFactory.Options option = new BitmapFactory.Options();
-		option.inSampleSize = getImageScale(imageUrl);
-		Bitmap bm = BitmapFactory.decodeFile(getCacheDirPath() + File.separator
-				+ imageUrl.replaceAll("/", "%2F").replace(":", "%3A"), option);
+		option.inJustDecodeBounds = true;  
+		option.inSampleSize = getImageScale(filePath);	
+		option.inJustDecodeBounds = false; 
+		
+		Bitmap bm = BitmapFactory.decodeFile(filePath, option);
 		imageView.setImageBitmap(bm);
 	}
 
@@ -197,15 +226,12 @@ public class FileUtil {
 	 * @param imageUrl
 	 * @return
 	 */
-	public static int getImageScale(String imageUrl) {
+	public static int getImageScale(String filePath) {
 		BitmapFactory.Options option = new BitmapFactory.Options();
 		// set inJustDecodeBounds to true, allowing the caller to query the
 		// bitmap info without having to allocate the
 		// memory for its pixels.
 		option.inJustDecodeBounds = true;
-		String filePath = getCacheDirPath() + File.separator
-				+ imageUrl.replaceAll("/", "%2F").replace(":", "%3A");
-		System.out.println("Read from SD card:" + filePath);
 		BitmapFactory.decodeFile(filePath, option);
 
 		int scale = 1;

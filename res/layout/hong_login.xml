@@ -4,42 +4,16 @@
     android:background="#33CCFF"
     android:orientation="vertical" >
 
-    <RelativeLayout
-        android:id="@+id/register_linerlayout_title"
-        android:layout_width="fill_parent"
-        android:layout_height="40dp"
-        android:background="#33CCFF" >
-
-        <Button
-            android:id="@+id/register_button_back"
-            android:layout_width="33dp"
-            android:layout_height="38dp"
-            android:layout_alignParentLeft="true"
-            android:layout_marginLeft="5dp"
-            android:background="@drawable/hong_register_button_back_w" />
-
-        <TextView
-            android:id="@+id/register_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:background="#33CCFF"
-            android:gravity="center"
-            android:text="用户登录"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#FFFFFF"
-            android:textSize="20dip" />
-    </RelativeLayout>
+    <include layout="@layout/hong_navigation_bar" />
 
     <ImageView
         android:id="@+id/imageview_xiaofanzhuo_picture"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="40dp"
         android:layout_weight="1"
-        android:src="@drawable/hong_logo" />
+        android:src="@drawable/hong_login_logo" />
 
     <RelativeLayout
         android:layout_width="fill_parent"
@@ -52,11 +26,13 @@
             android:layout_width="250dip"
             android:layout_height="40dip"
             android:layout_centerHorizontal="true"
-            android:layout_margin="2dip"
             android:layout_marginLeft="12dip"
             android:layout_marginRight="10dip"
+            android:layout_marginTop="40dp"
             android:background="#FFFFFF"
-            android:hint="手机号码" />
+            android:hint="手机号码"
+            android:maxLines="1"
+            android:singleLine="true" />
 
         <EditText
             android:id="@+id/edittext_secretcode"
@@ -69,8 +45,10 @@
             android:layout_marginRight="10dip"
             android:background="#FFFFFF"
             android:hint="密码"
+            android:maxLines="1"
             android:password="true"
-            android:scrollHorizontally="true" />
+            android:scrollHorizontally="true"
+            android:singleLine="true" />
 
         <LinearLayout
             android:id="@+id/auto_checkbox"

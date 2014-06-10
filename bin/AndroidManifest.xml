@@ -3,18 +3,18 @@
     package="com.xiaolong.xiaofanzhuo_xiaolonginfo"
     android:versionCode="1"
     android:versionName="1.0" >
-    
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-	<uses-permission android:name="android.permission.CALL_PHONE"/>
-	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-sdk
         android:minSdkVersion="14"
         android:targetSdkVersion="19" />
 
     <application
-        android:name="com.xiaolong.xiaofanzhuo.myapplication.MyApplication" 
+        android:name="com.xiaolong.xiaofanzhuo.myapplication.MyApplication"
         android:allowBackup="true"
         android:icon="@drawable/hong_logo"
         android:label="@string/app_name"
@@ -28,12 +28,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.xiaolong.xiaofanzhuo.businesslistings.BussinessListActivity"></activity>
-        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.LoginActivity"></activity>
-        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.RegisterActivity"></activity>
-        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.PersonInfoActivity"></activity>
-        <activity android:name="com.xiaolong.xiaofanzhuo.businessdetails.BussinessDetailActivity"></activity>
-        
+        <activity android:name="com.xiaolong.xiaofanzhuo.businesslistings.BusinessListActivity" >
+        </activity>
+        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.LoginActivity" >
+        </activity>
+        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.RegisterActivity" >
+        </activity>
+        <activity android:name="com.xiaolong.xiaofanzhuo.enteractivity.PersonInfoActivity" >
+        </activity>
+        <activity android:name="com.xiaolong.xiaofanzhuo.businessdetails.BusinessDetailActivity" >
+        </activity>
+        <activity android:name="com.xiaolong.xiaofanzhuo.businessorders.BusinessOrderActivity" >
+        </activity>
     </application>
 
 </manifest>

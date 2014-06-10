@@ -39,6 +39,11 @@ public class BasePictAdapter extends AbstractBasePictAdapter{
 		list.add(data);
 		this.notifyDataSetChanged();
 	}
+	
+	public void removePicture(Bundle data) {
+		list.remove(data);
+		this.notifyDataSetChanged();
+	}
 
 	@Override
 	public void clear() {
